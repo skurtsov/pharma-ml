@@ -1,33 +1,46 @@
 from rdkit import Chem
 from rdkit.Chem import Descriptors
-
+from rdkit.Chem import rdFingerprintGenerator
+from rdkit import DataStructs
+#Aspirin
 smiles = "CC(=O)OC1=CC=CC=C1C(=O)O"
+#Ibuprofen
+smiles_2 = "CC(C)CC1=CC=C(C=C1)C(C)C(=O)O"
+#Paracetamol
+smiles_3 = "CC(=O)NC1=CC=C(C=C1)O"
+##
 
-molecule = Chem.MolFromSmiles(smiles)
-molecular_weight = Descriptors.MolWt(molecule)
-log_p = Descriptors.MolLogP(molecule)
-h_bond_donors = Descriptors.NumHDonors(molecule)
-h_bond_acceptors = Descriptors.NumHAcceptors(molecule)
-print("Molecular Weight:", round(molecular_weight, 3))
-print("LogP:", round(log_p, 4))
-print("H-Bond Donors:", h_bond_donors)      
-print("H-Bond Acceptors:", h_bond_acceptors)    
+    
+generator = rdFingerprintGenerator.GetMorganGenerator(
+    radius=2,
+    fpSize=2048
+)
+def generate_fingerprint(smiles):
+    molecule = Chem.MolFromSmiles(smiles)
 
-num_atoms = molecule.GetNumAtoms()
-print(num_atoms)
+    if molecule is None:
+        raise ValueError(f"Invalid SMILES string: {smiles}")
 
-for atom in molecule.GetAtoms():
-    print(
-        atom.GetSymbol(),
-        atom.GetIdx(),
-        "H:",
-        atom.GetTotalNumHs()
-    )
+    return generator.GetFingerprint(molecule)
 
-for bond in molecule.GetBonds():
-    print(
-        bond.GetBeginAtomIdx(),
-        "->",
-        bond.GetEndAtomIdx(),
-        bond.GetBondType()
-    )
+fingerprint = generate_fingerprint(smiles)
+fingerprint_2 = generate_fingerprint(smiles_2)
+fingerprint_3 = generate_fingerprint(smiles_3)
+
+aspirin_ibuprofen = DataStructs.TanimotoSimilarity(
+    fingerprint,
+    fingerprint_2
+)
+
+aspirin_paracetamol = DataStructs.TanimotoSimilarity(
+    fingerprint,
+    fingerprint_3
+)
+
+ibuprofen_paracetamol = DataStructs.TanimotoSimilarity(
+    fingerprint_2,
+    fingerprint_3
+)
+print("Aspirin vs Ibuprofen:", round(aspirin_ibuprofen, 3))
+print("Aspirin vs Paracetamol:", round(aspirin_paracetamol, 3))
+print("Ibuprofen vs Paracetamol:", round(ibuprofen_paracetamol, 3))
