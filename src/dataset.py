@@ -2,10 +2,14 @@ from chembl import get_activities, get_molecule_smiles
 import csv
 from statistics import median
 
+
 def activity_to_record(activity):
     molecule_id = activity["molecule_chembl_id"]
-    smiles = get_molecule_smiles(molecule_id)
+    smiles = activity["canonical_smiles"]
 
+    if not smiles:
+        raise ValueError("Missing canonical SMILES")
+    
     ic50 = float(activity["standard_value"])
     label = 1 if ic50 <= 1000 else 0
 
@@ -16,19 +20,17 @@ def activity_to_record(activity):
         "label": label
     }
 
-
 activities = get_activities()
-first_activity = activities[0]
 
-print(first_activity.keys())
 records = []
 
-for activity in activities[:500]:
+for activity in activities:
     try:
         record = activity_to_record(activity)
         records.append(record)
     except Exception as error:
         print("Skipped:", activity["molecule_chembl_id"], error)
+
 
 print("Records:", len(records))
 
