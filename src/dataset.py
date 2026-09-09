@@ -18,7 +18,9 @@ def activity_to_record(activity):
 
 
 activities = get_activities()
+first_activity = activities[0]
 
+print(first_activity.keys())
 records = []
 
 for activity in activities[:500]:
